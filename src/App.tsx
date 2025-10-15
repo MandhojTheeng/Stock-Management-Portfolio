@@ -1,48 +1,43 @@
-import { useState } from 'react'
-import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { loadPortfolio, savePortfolio } from './utils/storage'
-import type { PortfolioStock, StockHistory } from './types'
-import StockForm from './components/StockForm'
-import PortfolioTable from './components/PortfolioTable'
-import StockCharts from './components/StockCharts'
-import { fetchMockStockHistory } from './api/mockApi'
+import { useState } from 'react';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
+import { fetchMockStockHistory } from './api/mockApi';
+import StockForm from './components/StockForm';
+import PortfolioTable from './components/PortfolioTable';
+import StockCharts from './components/StockCharts';
+import { usePortfolioStore } from './store/portfolioStore';
+import type { PortfolioStock, StockHistory } from './types';
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient();
 
 export default function App() {
-  const [portfolio, setPortfolio] = useState<PortfolioStock[]>(() => loadPortfolio())
-  const [editing, setEditing] = useState<PortfolioStock | null>(null)
-  const [selectedSymbol] = useState<string | null>(null)
+  const portfolio = usePortfolioStore(state => state.portfolio);
+  const addStock = usePortfolioStore(state => state.addStock);
+  const updateStock = usePortfolioStore(state => state.updateStock);
+  const deleteStock = usePortfolioStore(state => state.deleteStock);
+
+  const [editing, setEditing] = useState<PortfolioStock | null>(null);
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 
   const { data: historyData } = useQuery<StockHistory>({
     queryKey: ['stockHistory', selectedSymbol],
     queryFn: () => fetchMockStockHistory(selectedSymbol ?? ''),
     enabled: !!selectedSymbol
-  })
+  });
 
-  const handleSave = (s: PortfolioStock) => {
-    const updated = editing
-      ? portfolio.map(p => (p.id === s.id ? s : p))
-      : [...portfolio, s]
-    setPortfolio(updated)
-    savePortfolio(updated)
-    setEditing(null)
-  }
-
-  const handleDelete = (id: string) => {
-    if (!confirm('Delete this stock?')) return
-    const updated = portfolio.filter(p => p.id !== id)
-    setPortfolio(updated)
-    savePortfolio(updated)
-  }
+  const handleSave = (stock: PortfolioStock) => {
+    if (editing) updateStock(stock);
+    else addStock(stock);
+    setEditing(null);
+    setSelectedSymbol(stock.ticker);
+  };
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="app">
-        <h1>📈 Stock Portfolio Tracker</h1>
-        <div className="grid">
-          <div className="panel">
-            <h2>{editing ? 'Edit Stock' : 'Add Stock'}</h2>
+      <div className="max-w-6xl mx-auto p-6 space-y-6">
+        <h1 className="text-3xl font-bold text-center">📈 Stock Portfolio Tracker</h1>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-1">
             <StockForm
               initial={editing || {}}
               onSave={handleSave}
@@ -50,25 +45,22 @@ export default function App() {
             />
           </div>
 
-          <div className="panel wide">
-            <h2>My Portfolio</h2>
-            {portfolio.length === 0 ? (
-              <p className="muted">No stocks added yet.</p>
-            ) : (
-              <PortfolioTable
-                data={portfolio}
-                onEdit={setEditing}
-                onDelete={handleDelete}
-              />
-            )}
-          </div>
-        </div>
+          <div className="md:col-span-2 space-y-4">
+            <PortfolioTable
+              data={portfolio}
+              onEdit={(stock) => setEditing(stock)}
+              onDelete={(id) => {
+                if (confirm('Delete this stock?')) deleteStock(id);
+              }}
+            />
 
-        <div className="panel charts-section">
-          <h2>Stock Charts</h2>
-          <StockCharts history={historyData ?? null} />
+            <div>
+              <h2 className="text-xl font-semibold mb-2">Stock Charts</h2>
+              <StockCharts history={historyData ?? null} />
+            </div>
+          </div>
         </div>
       </div>
     </QueryClientProvider>
-  )
+  );
 }

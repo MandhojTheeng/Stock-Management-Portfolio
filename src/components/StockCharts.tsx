@@ -1,13 +1,13 @@
-import Highcharts from 'highcharts'
-import HighchartsReact from 'highcharts-react-official'
-import type { StockHistory } from '../types'
+import Highcharts from 'highcharts';
+import HighchartsReact from 'highcharts-react-official';
+import type { StockHistory } from '../types';
 
 type Props = {
-  history: StockHistory | null
-}
+  history: StockHistory | null;
+};
 
 export default function StockCharts({ history }: Props) {
-  if (!history) return <p className="muted">Select a stock to see charts</p>
+  if (!history) return <p className="text-gray-500">Select a stock to see charts</p>;
 
   const options = {
     title: { text: `${history.symbol} Price History` },
@@ -20,7 +20,11 @@ export default function StockCharts({ history }: Props) {
       { title: { text: 'Price' } },
       { title: { text: 'Volume' }, opposite: true }
     ]
-  }
+  };
 
-  return <HighchartsReact highcharts={Highcharts} options={options} />
+  return (
+    <div className="bg-white rounded-lg shadow-md p-4">
+      <HighchartsReact highcharts={Highcharts} options={options} />
+    </div>
+  );
 }

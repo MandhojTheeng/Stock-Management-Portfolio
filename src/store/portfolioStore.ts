@@ -1,32 +1,35 @@
-import { create } from "zustand";
-import type { Stock } from "../types";
+import { create } from 'zustand';
+import type { PortfolioStock } from '../types';
 
-type PortfolioState = {
-  stocks: Stock[];
-  addStock: (stock: Stock) => void;
+const STORAGE_KEY = 'my_portfolio';
+
+interface PortfolioState {
+  portfolio: PortfolioStock[];
+  addStock: (stock: PortfolioStock) => void;
+  updateStock: (stock: PortfolioStock) => void;
   deleteStock: (id: string) => void;
-  updateStock: (id: string, patch: Partial<Stock>) => void;
-  loadFromLocalStorage: () => void;
-};
-
-const STORAGE_KEY = "portfolio_v1";
+  loadPortfolio: () => void;
+}
 
 export const usePortfolioStore = create<PortfolioState>((set, get) => ({
-  stocks: [],
-  addStock: (stock) => set((s) => ({ stocks: [...s.stocks, stock] })),
-  deleteStock: (id) => set((s) => ({ stocks: s.stocks.filter(st => st.id !== id) })),
-  updateStock: (id, patch) =>
-    set((s) => ({ stocks: s.stocks.map(st => (st.id === id ? { ...st, ...patch } : st)) })),
-  loadFromLocalStorage: () => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) set({ stocks: JSON.parse(raw) });
-    } catch {}
+  portfolio: [],
+  addStock: (stock) => {
+    const updated = [...get().portfolio, stock];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    set({ portfolio: updated });
   },
+  updateStock: (stock) => {
+    const updated = get().portfolio.map(p => p.id === stock.id ? stock : p);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    set({ portfolio: updated });
+  },
+  deleteStock: (id) => {
+    const updated = get().portfolio.filter(p => p.id !== id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    set({ portfolio: updated });
+  },
+  loadPortfolio: () => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) set({ portfolio: JSON.parse(stored) });
+  }
 }));
-
-// Persist stocks to localStorage
-usePortfolioStore.subscribe(
-  (state) => state.stocks,
-  (stocks) => localStorage.setItem(STORAGE_KEY, JSON.stringify(stocks))
-);

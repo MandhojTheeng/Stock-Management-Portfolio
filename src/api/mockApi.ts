@@ -13,7 +13,6 @@ export function fetchMockStockHistory(symbol: string, days = 30): Promise<StockH
         const volume = Math.floor(1000 + Math.random() * 5000)
         return { date: d.toISOString().slice(0, 10), close, volume }
       })
-
       resolve({ symbol, history })
     }, 400)
   })
