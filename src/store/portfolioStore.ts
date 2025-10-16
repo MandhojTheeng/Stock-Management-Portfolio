@@ -1,35 +1,39 @@
-import { create } from 'zustand';
-import type { PortfolioStock } from '../types';
+import { create } from "zustand";
+import type { PortfolioStock } from "../types";
 
-const STORAGE_KEY = 'my_portfolio';
+const STORAGE_KEY = "my_portfolio";
 
 interface PortfolioState {
-  portfolio: PortfolioStock[];
+  stocks: PortfolioStock[]; 
   addStock: (stock: PortfolioStock) => void;
   updateStock: (stock: PortfolioStock) => void;
   deleteStock: (id: string) => void;
-  loadPortfolio: () => void;
+  loadFromLocalStorage: () => void;
 }
 
 export const usePortfolioStore = create<PortfolioState>((set, get) => ({
-  portfolio: [],
+  stocks: [],
+
   addStock: (stock) => {
-    const updated = [...get().portfolio, stock];
+    const updated = [...get().stocks, stock];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    set({ portfolio: updated });
+    set({ stocks: updated });
   },
+
   updateStock: (stock) => {
-    const updated = get().portfolio.map(p => p.id === stock.id ? stock : p);
+    const updated = get().stocks.map((p) => (p.id === stock.id ? stock : p));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    set({ portfolio: updated });
+    set({ stocks: updated });
   },
+
   deleteStock: (id) => {
-    const updated = get().portfolio.filter(p => p.id !== id);
+    const updated = get().stocks.filter((p) => p.id !== id);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    set({ portfolio: updated });
+    set({ stocks: updated });
   },
-  loadPortfolio: () => {
+
+  loadFromLocalStorage: () => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) set({ portfolio: JSON.parse(stored) });
-  }
+    if (stored) set({ stocks: JSON.parse(stored) });
+  },
 }));

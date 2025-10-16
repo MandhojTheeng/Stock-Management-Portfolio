@@ -11,9 +11,10 @@ type Props = {
   data: PortfolioStock[];
   onEdit?: (stock: PortfolioStock) => void;
   onDelete?: (id: string) => void;
+  onSelectSymbol?: (symbol: string) => void;
 };
 
-export default function PortfolioTable({ data, onEdit, onDelete }: Props) {
+export default function PortfolioTable({ data, onEdit, onDelete, onSelectSymbol }: Props) {
   const columnHelper = createColumnHelper<PortfolioStock>();
 
   const columns = useMemo(() => [
@@ -70,7 +71,11 @@ export default function PortfolioTable({ data, onEdit, onDelete }: Props) {
         </thead>
         <tbody>
           {table.getRowModel().rows.map(row => (
-            <tr key={row.id} className="border-b last:border-b-0">
+            <tr
+              key={row.id}
+              className="border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
+              onClick={() => onSelectSymbol?.(row.original.ticker)}
+            >
               {row.getVisibleCells().map(cell => (
                 <td key={cell.id} className="px-4 py-2">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
