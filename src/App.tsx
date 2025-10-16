@@ -6,7 +6,7 @@ import PortfolioTable from './components/PortfolioTable';
 import StockCharts from './components/StockCharts';
 import { usePortfolioStore } from './store/portfolioStore';
 import type { PortfolioStock, StockHistory } from './types';
-import { MOCK_STOCKS } from './api/mockStockData'; // Import your mock data
+import { MOCK_STOCKS } from './api/mockStockData'; 
 
 const queryClient = new QueryClient();
 
@@ -40,7 +40,7 @@ export default function App() {
     if (editing) updateStock(stock);
     else addStock(stock);
     setEditing(null);
-    setSelectedSymbol(stock.ticker); // Show chart for saved/edited stock
+    setSelectedSymbol(stock.ticker); 
     setShowForm(false);
   };
 
@@ -55,7 +55,7 @@ export default function App() {
       <div className="min-h-screen bg-gray-50 p-6">
         {/* Header */}
         <h1 className="text-4xl font-extrabold text-center text-gray-800 mb-6">
-          📊 Stock Portfolio Tracker
+          Stock Portfolio Tracker
         </h1>
 
         {/* Add & Search Bar */}
@@ -108,7 +108,7 @@ export default function App() {
               onDelete={id => {
                 if (confirm('Delete this stock?')) deleteStock(id);
               }}
-              onSelect={(ticker: string) => setSelectedSymbol(ticker)} // Click ticker shows chart
+              onSelect={(ticker: string) => setSelectedSymbol(ticker)} 
             />
           )}
         </div>
