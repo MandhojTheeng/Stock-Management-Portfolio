@@ -1,31 +1,45 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { fetchMockStockHistory } from './api/mockApi';
 import StockForm from './components/StockForm';
 import PortfolioTable from './components/PortfolioTable';
 import StockCharts from './components/StockCharts';
 import { usePortfolioStore } from './store/portfolioStore';
+import { MOCK_STOCKS } from './api/mockStockData';
 import type { PortfolioStock, StockHistory } from './types';
 
 const queryClient = new QueryClient();
 
 export default function App() {
+  // Zustand store
   const portfolio = usePortfolioStore(state => state.stocks);
   const addStock = usePortfolioStore(state => state.addStock);
   const updateStock = usePortfolioStore(state => state.updateStock);
   const deleteStock = usePortfolioStore(state => state.deleteStock);
+  const loadFromLocalStorage = usePortfolioStore(state => state.loadFromLocalStorage);
 
+  // Local state
   const [editing, setEditing] = useState<PortfolioStock | null>(null);
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
 
+  // Load mock data if store is empty
+  useEffect(() => {
+    loadFromLocalStorage();
+    if (portfolio.length === 0) {
+      MOCK_STOCKS.forEach(stock => addStock(stock));
+    }
+  }, []);
+
+  // Fetch stock history for charts
   const { data: historyData } = useQuery<StockHistory>({
     queryKey: ['stockHistory', selectedSymbol],
     queryFn: () => fetchMockStockHistory(selectedSymbol ?? ''),
     enabled: !!selectedSymbol,
   });
 
+  // Save stock from form
   const handleSave = (stock: PortfolioStock) => {
     if (editing) updateStock(stock);
     else addStock(stock);
@@ -34,6 +48,7 @@ export default function App() {
     setShowForm(false);
   };
 
+  // Filter portfolio for search
   const filteredPortfolio = portfolio.filter(stock =>
     stock.company.toLowerCase().includes(search.toLowerCase()) ||
     stock.ticker.toLowerCase().includes(search.toLowerCase())
@@ -44,7 +59,7 @@ export default function App() {
       <div className="min-h-screen bg-gray-50 p-6">
         {/* Header */}
         <h1 className="text-4xl font-extrabold text-center text-gray-800 mb-6">
-          📊 Stock Portfolio Tracker
+         Stock Portfolio Tracker
         </h1>
 
         {/* Add & Search Bar */}
@@ -68,7 +83,9 @@ export default function App() {
         {/* Stock Form */}
         {showForm && (
           <div className="bg-white shadow-lg rounded-lg p-6 mb-6 transition-all">
-            <h2 className="text-2xl font-semibold mb-4">{editing ? 'Edit Stock' : 'Add New Stock'}</h2>
+            <h2 className="text-2xl font-semibold mb-4">
+              {editing ? 'Edit Stock' : 'Add New Stock'}
+            </h2>
             <StockForm
               initial={editing || {}}
               onSave={handleSave}
